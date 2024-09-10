@@ -11,7 +11,7 @@ import (
 	"strings"
 )
 
-func mixcloud_upload(srcPath string, localPicPath string, fileName string, payload map[string]string) {
+func mixcloud_upload(srcPath string, localPicPath string, payload map[string]string) {
 	audioFile, _ := os.Open(srcPath)
 	picFile, _ := os.Open(localPicPath)
 	body := &bytes.Buffer{}
@@ -23,9 +23,7 @@ func mixcloud_upload(srcPath string, localPicPath string, fileName string, paylo
 	_, _ = io.Copy(picPart, picFile)
 	writer.WriteField("name", payload["show_name"])
 	writer.WriteField("description", payload["description"])
-	writer.WriteField("disable_comments", "true")
 	writer.WriteField("hide_stats", "true")
-	writer.WriteField("unlisted", "true")
 	writer.WriteField("publish_date", get_publish())
 
 	for key, value := range payload {
@@ -46,12 +44,12 @@ func mixcloud_upload(srcPath string, localPicPath string, fileName string, paylo
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		fmt.Printf("Upload to Mixcloud %s failed: %v\n", fileName, err)
+		fmt.Printf("Upload to Mixcloud %s failed: %v\n", payload["show_name"], err)
 		return
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		fmt.Printf("Upload to Mixcloud %s failed: %s\n", fileName, resp.Status)
+		fmt.Printf("Upload to Mixcloud %s failed: %s\n", payload["show_name"], resp.Status)
 		responseBody, _ := io.ReadAll(resp.Body)
 		fmt.Printf("Response: %s\n", responseBody)
 		if bytes.Contains(responseBody, []byte("RateLimitException")) {
@@ -59,8 +57,9 @@ func mixcloud_upload(srcPath string, localPicPath string, fileName string, paylo
 			return
 		}
 	} else {
-		fmt.Printf("Upload to Mixcloud %s PASSED\n", fileName)
+		fmt.Printf("Upload to Mixcloud %s PASSED\n", payload["show_name"])
 	}
 	resp.Body.Close()
 	audioFile.Close()
+	picFile.Close()
 }

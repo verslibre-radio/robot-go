@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -44,7 +45,8 @@ func get_picture(tag string, ctx context.Context) {
 
 func get_publish() string {
 	now := time.Now()
-	format_date := fmt.Sprintf("%d-%02d-%02dT14:00:00Z", now.Year(), now.Month(), now.Day())
+	futureTime := now.Add(24 * time.Hour)
+	format_date := fmt.Sprintf("%d-%02d-%02dT14:00:00Z", futureTime.Year(), futureTime.Month(), futureTime.Day())
 	return format_date
 }
 
@@ -74,7 +76,9 @@ func main() {
 					payload[columns[i].(string)] = sheet[i].(string)
 				}
 				get_picture(sheet[4].(string), ctx)
-				mixcloud_upload("./upload/20240723_TEST_Mist_Rebuttal_11_DJ.mp3", "./pictures/TEST.jpeg", "Does it matter?", payload)
+				audio_path := filepath.Join("upload", f.Name())
+				pic_path := filepath.Join("pictures", sheet[4].(string))
+				mixcloud_upload(audio_path, pic_path, payload)
 			}
 		}
 	}
