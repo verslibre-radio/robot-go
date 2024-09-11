@@ -5,6 +5,7 @@ import (
 	"io"
 	"log"
 	"os"
+	"path/filepath"
 
 	"google.golang.org/api/drive/v3"
 )
@@ -36,20 +37,18 @@ func CopyFile(source_file_id string, dest_folder_id string, srv *drive.Service) 
 	if err != nil {
 		log.Fatal(err)
 	} else {
-		log.Println("Copied", file.Name, "to folder: ", dest_folder_id)
 	}
 }
 
 func MoveFile(srv *drive.Service, source_file_id string, source_folder_id string, dest_folder_id string) {
 	_, err := srv.Files.Update(source_file_id, nil).
-		RemoveParents(source_file_id).
+		RemoveParents(source_folder_id).
 		AddParents(dest_folder_id).
 		Do()
 
 	if err != nil {
 		log.Fatal(err)
 	}
-	log.Printf("File %s moved from folder %s to folder %s", source_file_id, source_folder_id, dest_folder_id)
 }
 
 func DownloadFile(srv *drive.Service, source_file_id string, local_path string) {
@@ -69,6 +68,15 @@ func DownloadFile(srv *drive.Service, source_file_id string, local_path string) 
 	if err != nil {
 		log.Fatal(err)
 	}
+}
 
-	log.Printf("File %s downloaded to %s", source_file_id, local_path)
+func CheckPath(path string) error {
+	absPath, err := filepath.Abs(path)
+	if err != nil {
+		return err
+	}
+	if _, err := os.Stat(absPath); os.IsNotExist(err) {
+		return os.MkdirAll(absPath, os.ModePerm)
+	}
+	return nil
 }

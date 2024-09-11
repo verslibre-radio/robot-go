@@ -2,8 +2,12 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
-  "github.com/mjoes/mixcloud-go/pkg/utils"
+	"os"
+	"path/filepath"
+
+	"github.com/mjoes/mixcloud-go/pkg/utils"
 	"google.golang.org/api/drive/v3"
 	"google.golang.org/api/option"
 )
@@ -21,14 +25,50 @@ var folderIds = map[string]string{
 var local_download_path = "/Users/mortenslingsby/Desktop/"
 
 func main() {
+	if len(os.Args) < 2 {
+		fmt.Println("No path to local temp storage for files provided")
+		return
+	} else if len(os.Args) > 2 {
+    fmt.Println("Too many arguments provided")
+    return
+  }
+
+	base_path := os.Args[1]
+  utils.CheckPath(base_path)
+
 	log.Println("Starting Google Drive move operation")
 	ctx := context.Background()
 	driveService, _ := drive.NewService(ctx, option.WithCredentialsFile("./cred.json"))
-	// copy_file("1fCDnR8KDTqwQEDEFuPZCvZqn8AInUiY_", "macmini", driveService)
-	// move_file(driveService, "1iY1F3HvZulMLcLKjgnBoa4ZMKte9vl0Z", "sent", "macmini")
-  utils.DownloadFile(driveService, "1pB9900KeU83_pT6iJ7uXwgTggf3XsR1b", "/Users/mortenslingsby/Desktop/test.mp3")
-	// for _, f := range list_files(folderid_sent, driveService) {
-	// 	fmt.Println(f.Id, f.Name)
-	// }
 
+	// Auphonic on Macmini to auphonic upload
+	log.Println("Processing the to be mixed auphonic files")
+	for _, f := range utils.ListFiles(folderIds["auphonic_macmini"], driveService) {
+		log.Println(f.Name, "- Copying...")
+		utils.CopyFile(f.Id, folderIds["auphonic_preprocess"], driveService)
+		log.Println(f.Name, "- Moving...")
+		utils.MoveFile(driveService, f.Id, folderIds["auphonic_macmini"], folderIds["sent"])
+		log.Println(f.Name, "- Successfully processed")
+	}
+
+	// Download from auphonic upload
+	log.Println("Processing the mixed auphonic files")
+	for _, f := range utils.ListFiles(folderIds["auphonic"], driveService) {
+		log.Println(f.Name, "- Downloading...")
+		utils.DownloadFile(driveService, f.Id, filepath.Join(base_path, f.Name))
+		log.Println(f.Name, "- Moving...")
+		utils.MoveFile(driveService, f.Id, folderIds["auphonic"], folderIds["sent"])
+		log.Println(f.Name, "- Successfully processed")
+	}
+
+	// Download from upload
+	log.Println("Processing the upload folder")
+	for _, f := range utils.ListFiles(folderIds["upload_source"], driveService) {
+		log.Println(f.Name, "- Downloading...")
+		utils.DownloadFile(driveService, f.Id, filepath.Join(base_path, f.Name))
+		log.Println(f.Name, "- Moving...")
+		utils.MoveFile(driveService, f.Id, folderIds["upload_source"], folderIds["sent"])
+		log.Println(f.Name, "- Successfully processed")
+	}
+
+	log.Println("Completed all the moves")
 }
