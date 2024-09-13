@@ -80,3 +80,25 @@ func CheckPath(path string) error {
 	}
 	return nil
 }
+
+func GetPicture(tag string, driveService *drive.Service, picture_path string, drive_picture_folder string) {
+	var Q_string string = fmt.Sprintf("'%s' in parents", drive_picture_folder)
+	drive := driveService.Files.List()
+	filtered, err := drive.
+		IncludeItemsFromAllDrives(true).
+		SupportsAllDrives(true).
+		Corpora("drive").
+		DriveId("0AGvEMGW0880aUk9PVA").
+		Q(Q_string).
+		Do()
+
+	if err != nil {
+		log.Println("Error:", err)
+	}
+	for _, f := range filtered.Files {
+		if f.Name == tag {
+			DownloadFile(driveService, f.Id, picture_path)
+		}
+	}
+}
+

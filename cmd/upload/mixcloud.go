@@ -4,14 +4,16 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"log"
 	"mime/multipart"
 	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
+	"github.com/mjoes/mixcloud-go/pkg/utils"
 )
 
-func mixcloud_upload(srcPath string, localPicPath string, payload map[string]string) {
+func MixcloudUpload(srcPath string, localPicPath string, payload map[string]string) error {
 	audioFile, _ := os.Open(srcPath)
 	picFile, _ := os.Open(localPicPath)
 	body := &bytes.Buffer{}
@@ -24,7 +26,8 @@ func mixcloud_upload(srcPath string, localPicPath string, payload map[string]str
 	writer.WriteField("name", payload["show_name"])
 	writer.WriteField("description", payload["description"])
 	writer.WriteField("hide_stats", "true")
-	writer.WriteField("publish_date", get_publish())
+	fmt.Println(utils.GetPublish())
+	writer.WriteField("publish_date", utils.GetPublish())
 
 	for key, value := range payload {
 		if strings.Contains(key, "tags") {
@@ -36,16 +39,16 @@ func mixcloud_upload(srcPath string, localPicPath string, payload map[string]str
 	url := fmt.Sprintf("https://api.mixcloud.com/upload/?access_token=%s", os.Getenv("API_KEY"))
 	req, err := http.NewRequest("POST", url, body)
 	if err != nil {
-		fmt.Printf("Failed to create request: %v\n", err)
-		return
+		log.Printf("Failed to create request: %v\n", err)
+		return err
 	}
 	req.Header.Set("Content-Type", writer.FormDataContentType())
 
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		fmt.Printf("Upload to Mixcloud %s failed: %v\n", payload["show_name"], err)
-		return
+		log.Printf("Upload to Mixcloud %s failed: %v\n", payload["show_name"], err)
+		return err
 	}
 
 	if resp.StatusCode != http.StatusOK {
@@ -53,13 +56,14 @@ func mixcloud_upload(srcPath string, localPicPath string, payload map[string]str
 		responseBody, _ := io.ReadAll(resp.Body)
 		fmt.Printf("Response: %s\n", responseBody)
 		if bytes.Contains(responseBody, []byte("RateLimitException")) {
-			fmt.Println("RateLimit Exception, break program")
-			return
+			return fmt.Errorf("RateLimit Exception, break program")
 		}
 	} else {
-		fmt.Printf("Upload to Mixcloud %s PASSED\n", payload["show_name"])
+		log.Printf("Upload to Mixcloud %s PASSED\n", payload["show_name"])
 	}
 	resp.Body.Close()
 	audioFile.Close()
 	picFile.Close()
+
+	return nil
 }

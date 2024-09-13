@@ -29,12 +29,12 @@ func main() {
 		fmt.Println("No path to local temp storage for files provided")
 		return
 	} else if len(os.Args) > 2 {
-    fmt.Println("Too many arguments provided")
-    return
-  }
+		fmt.Println("Too many arguments provided")
+		return
+	}
 
 	base_path := os.Args[1]
-  utils.CheckPath(base_path)
+	utils.CheckPath(base_path)
 
 	log.Println("Starting Google Drive move operation")
 	ctx := context.Background()
