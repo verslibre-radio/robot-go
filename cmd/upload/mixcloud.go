@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"fmt"
+	"github.com/mjoes/mixcloud-go/pkg/utils"
 	"io"
 	"log"
 	"mime/multipart"
@@ -10,7 +11,6 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"github.com/mjoes/mixcloud-go/pkg/utils"
 )
 
 func MixcloudUpload(srcPath string, localPicPath string, payload map[string]string) error {

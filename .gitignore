@@ -4,5 +4,5 @@ cred.json
 .env
 pictures/*
 upload/*
-.DS*
+*.DS*
 *DS_STORE*

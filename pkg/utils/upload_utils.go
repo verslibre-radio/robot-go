@@ -2,6 +2,8 @@ package utils
 
 import (
 	"fmt"
+	"io"
+	"os"
 	"path/filepath"
 	"time"
 )
@@ -13,20 +15,37 @@ func GetPublish() string {
 	return format_date
 }
 
-func GetPaths(input_paths []string) (string, string, string, error) {
-	if len(input_paths) < 3 {
-		return "", "", "", fmt.Errorf("Too few arguments provided")
-	} else if len(input_paths) > 3 {
-		return "", "", "", fmt.Errorf("Too many arguments provided")
-	}
-	base_path := input_paths[1]
+func GetPaths(base_path string) (string, string, error) {
 	audio_base_path := filepath.Join(base_path, "to_upload")
 	picture_base_path := filepath.Join(base_path, "picture")
 	CheckPath(audio_base_path)
 	CheckPath(picture_base_path)
 
-	cred_path := input_paths[2]
-	CheckPath(cred_path)
+	return audio_base_path, picture_base_path, nil
+}
 
-	return audio_base_path, picture_base_path, cred_path, nil
+func LocalMove(src_path string, dest_path string) error {
+	srcFile, err := os.Open(src_path)
+	if err != nil {
+		return fmt.Errorf("failed to open source file: %w", err)
+	}
+	defer srcFile.Close()
+
+	dstFile, err := os.Create(dest_path)
+	if err != nil {
+		return fmt.Errorf("failed to create destination file: %w", err)
+	}
+	defer dstFile.Close()
+
+	_, err = io.Copy(dstFile, srcFile)
+	if err != nil {
+		return fmt.Errorf("failed to copy file content: %w", err)
+	}
+
+	err = os.Remove(src_path)
+	if err != nil {
+		return fmt.Errorf("failed to delete source file: %w", err)
+	}
+
+	return nil
 }
