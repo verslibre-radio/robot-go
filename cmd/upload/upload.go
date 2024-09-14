@@ -2,12 +2,12 @@ package main
 
 import (
 	"context"
+	"flag"
 	"fmt"
 	"log"
 	"os"
 	"path/filepath"
 	"strings"
-  "flag"
 
 	"github.com/mjoes/mixcloud-go/pkg/utils"
 	"google.golang.org/api/drive/v3"
@@ -20,24 +20,24 @@ var drive_picture_folder string = "1t7JgNd4U1oQEYw4NTdHPUFAIxd9YJWq3"
 var archive_id string = "1qklZQWVpNRYJWLd0-0zBhxZLyWCHrtpe"
 
 func main() {
-  base_path := flag.String("local", "", "Path to local temp storage for upload files and pictures")
-  archive_path := flag.String("archive", "", "Path to local archive folder")
-  cred_path := flag.String("credentials", "", "Path to credentials file")
-  flag.Parse()
-  if *base_path == "" {
-      fmt.Println("Local path not set")
-      return
-  } 	
-  if *archive_path == "" {
-      fmt.Println("Archive path not set")
-      return
-  } 	
-  if *cred_path == "" {
-      fmt.Println("Credential path not set")
-      return
-  } 	
+	base_path := flag.String("local", "", "Path to local temp storage for upload files and pictures")
+	archive_path := flag.String("archive", "", "Path to local archive folder")
+	cred_path := flag.String("credentials", "", "Path to credentials file")
+	flag.Parse()
+	if *base_path == "" {
+		fmt.Println("Local path not set")
+		return
+	}
+	if *archive_path == "" {
+		fmt.Println("Archive path not set")
+		return
+	}
+	if *cred_path == "" {
+		fmt.Println("Credential path not set")
+		return
+	}
 
-  audio_base_path, picture_base_path, err := utils.GetPaths(*base_path)
+	audio_base_path, picture_base_path, err := utils.GetPaths(*base_path)
 	if err != nil {
 		log.Fatal(err)
 		return
@@ -86,17 +86,17 @@ func main() {
 					return
 				}
 				log.Println(f.Name(), "- Start upload to Radiocult")
-        log.Println("Yet to be implemented")
+				log.Println("Yet to be implemented")
 
 				log.Println(f.Name(), "- Start upload to Drive Archive")
-        err = utils.Upload(driveService, f.Name(), audio_path, archive_id)
+				err = utils.Upload(driveService, f.Name(), audio_path, archive_id)
 				if err != nil {
 					log.Fatal(err)
 					return
 				}
 
 				log.Println(f.Name(), "- Move to local archive")
-        err = utils.LocalMove(audio_path, filepath.Join(*archive_path, f.Name()))
+				err = utils.LocalMove(audio_path, filepath.Join(*archive_path, f.Name()))
 				if err != nil {
 					log.Fatal(err)
 					return
