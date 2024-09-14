@@ -102,3 +102,27 @@ func GetPicture(tag string, driveService *drive.Service, picture_path string, dr
 	}
 }
 
+func Upload(srv *drive.Service, file_name string, file_path string, destination_folder string) error {
+  file := &drive.File{
+      Name:     file_name,
+      MimeType: "audio/mpeg",
+      Parents:  []string{destination_folder},
+  }
+
+  f, err := os.Open(file_path)
+  if err != nil {
+      return fmt.Errorf("Unable to open file: %v", err)
+  }
+  defer f.Close()
+
+  _, err = srv.Files.
+    Create(file).
+		SupportsAllDrives(true).
+    Media(f).
+    Do()
+  if err != nil {
+      return fmt.Errorf("Unable to create file: %v", err)
+  }
+  return nil 
+}
+

@@ -16,6 +16,7 @@ import (
 
 var sheet_id string = "1XmJ8mXzMsBzDv13ZwM9tXasym5z3ZzlmNKC7xFudkzo"
 var drive_picture_folder string = "1t7JgNd4U1oQEYw4NTdHPUFAIxd9YJWq3"
+var archive_id string = "1qklZQWVpNRYJWLd0-0zBhxZLyWCHrtpe"
 
 func main() {
 	arg_list := os.Args
@@ -59,7 +60,7 @@ func main() {
 				log.Println(f.Name(), "- Downloading picture to local storage")
 				picture_path := filepath.Join(picture_base_path, sheet[4].(string))
 				utils.GetPicture(sheet[4].(string), driveService, picture_path, drive_picture_folder)
-				// audio_path := filepath.Join(audio_base_path, f.Name())
+				audio_path := filepath.Join(audio_base_path, f.Name())
 
 				log.Println(f.Name(), "- Start upload to mixcloud")
 				// err = MixcloudUpload(audio_path, picture_path, payload)
@@ -67,8 +68,16 @@ func main() {
 				// 	log.Fatal("Error:", err)
 				// 	return
 				// }
-				log.Println("****", f.Name(), "- Start upload to Radiocult ***")
+				log.Println(f.Name(), "- Start upload to Radiocult")
+        log.Println("Yet to be implemented")
+
 				log.Println(f.Name(), "- Start upload to Drive Archive")
+        err = utils.Upload(driveService, f.Name(), audio_path, archive_id)
+				if err != nil {
+					log.Fatal(err)
+					return
+				}
+
 				log.Println(f.Name(), "- Move to local archive")
 				log.Println("-----COMPLETED-----")
 			}
