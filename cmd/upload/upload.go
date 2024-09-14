@@ -21,10 +21,15 @@ var archive_id string = "1qklZQWVpNRYJWLd0-0zBhxZLyWCHrtpe"
 
 func main() {
   base_path := flag.String("local", "", "Path to local temp storage for upload files and pictures")
+  archive_path := flag.String("archive", "", "Path to local archive folder")
   cred_path := flag.String("credentials", "", "Path to credentials file")
   flag.Parse()
   if *base_path == "" {
       fmt.Println("Local path not set")
+      return
+  } 	
+  if *archive_path == "" {
+      fmt.Println("Archive path not set")
       return
   } 	
   if *cred_path == "" {
@@ -75,11 +80,11 @@ func main() {
 				audio_path := filepath.Join(audio_base_path, f.Name())
 
 				log.Println(f.Name(), "- Start upload to mixcloud")
-				// err = MixcloudUpload(audio_path, picture_path, payload)
-				// if err != nil {
-				// 	log.Fatal("Error:", err)
-				// 	return
-				// }
+				err = MixcloudUpload(audio_path, picture_path, payload)
+				if err != nil {
+					log.Fatal("Error:", err)
+					return
+				}
 				log.Println(f.Name(), "- Start upload to Radiocult")
         log.Println("Yet to be implemented")
 
@@ -91,6 +96,11 @@ func main() {
 				}
 
 				log.Println(f.Name(), "- Move to local archive")
+        err = utils.LocalMove(audio_path, filepath.Join(*archive_path, f.Name()))
+				if err != nil {
+					log.Fatal(err)
+					return
+				}
 				log.Println("-----COMPLETED-----")
 			}
 		}
