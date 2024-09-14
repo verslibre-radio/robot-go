@@ -3,7 +3,7 @@
 ## Move
 The package is run using this command:
 ```
-/path/to/binary <path/to/temp/local/folder>
+/path/to/binary -local <path/to/temp/local/folder> -credentials <path/to/cred.json>
 ```
 
 The move pacakge is used to move files between google drive folders so that they are picked up and handled correctly further down the line. There are basically 3 transfers that take place:
