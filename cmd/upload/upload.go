@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+  "flag"
 
 	"github.com/mjoes/mixcloud-go/pkg/utils"
 	"google.golang.org/api/drive/v3"
@@ -19,21 +20,32 @@ var drive_picture_folder string = "1t7JgNd4U1oQEYw4NTdHPUFAIxd9YJWq3"
 var archive_id string = "1qklZQWVpNRYJWLd0-0zBhxZLyWCHrtpe"
 
 func main() {
-	arg_list := os.Args
-	audio_base_path, picture_base_path, cred_path, err := utils.GetPaths(arg_list)
+  base_path := flag.String("local", "", "Path to local temp storage for upload files and pictures")
+  cred_path := flag.String("credentials", "", "Path to credentials file")
+  flag.Parse()
+  if *base_path == "" {
+      fmt.Println("Local path not set")
+      return
+  } 	
+  if *cred_path == "" {
+      fmt.Println("Credential path not set")
+      return
+  } 	
+
+  audio_base_path, picture_base_path, err := utils.GetPaths(*base_path)
 	if err != nil {
-		log.Println("Error:", err)
+		log.Fatal(err)
 		return
 	}
 
 	fmt.Println("Starting upload of audio")
 
 	ctx := context.Background()
-	driveService, err := drive.NewService(ctx, option.WithCredentialsFile(cred_path))
+	driveService, err := drive.NewService(ctx, option.WithCredentialsFile(*cred_path))
 	if err != nil {
 		log.Fatal("Error:", err)
 	}
-	sheetsService, err := sheets.NewService(ctx, option.WithCredentialsFile(cred_path))
+	sheetsService, err := sheets.NewService(ctx, option.WithCredentialsFile(*cred_path))
 	if err != nil {
 		log.Fatal("Error:", err)
 	}

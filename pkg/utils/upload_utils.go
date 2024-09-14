@@ -13,20 +13,11 @@ func GetPublish() string {
 	return format_date
 }
 
-func GetPaths(input_paths []string) (string, string, string, error) {
-	if len(input_paths) < 3 {
-		return "", "", "", fmt.Errorf("Too few arguments provided")
-	} else if len(input_paths) > 3 {
-		return "", "", "", fmt.Errorf("Too many arguments provided")
-	}
-	base_path := input_paths[1]
+func GetPaths(base_path string) (string, string, error) {
 	audio_base_path := filepath.Join(base_path, "to_upload")
 	picture_base_path := filepath.Join(base_path, "picture")
 	CheckPath(audio_base_path)
 	CheckPath(picture_base_path)
 
-	cred_path := input_paths[2]
-	CheckPath(cred_path)
-
-	return audio_base_path, picture_base_path, cred_path, nil
+	return audio_base_path, picture_base_path, nil
 }
