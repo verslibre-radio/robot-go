@@ -2,9 +2,9 @@ package main
 
 import (
 	"context"
+	"flag"
 	"fmt"
 	"log"
-	"os"
 	"path/filepath"
 
 	"github.com/mjoes/mixcloud-go/pkg/utils"
@@ -22,23 +22,25 @@ var folderIds = map[string]string{
 	"macmini":             "1--7daLxjUi6zmFm6K952EDby8LBZFi5i",
 }
 
-var local_download_path = "/Users/mortenslingsby/Desktop/"
-
 func main() {
-	if len(os.Args) < 2 {
-		fmt.Println("No path to local temp storage for files provided")
+	base_path := flag.String("local", "", "Path to local temp storage for audio files")
+	cred_path := flag.String("credentials", "", "Path to credentials file")
+	flag.Parse()
+	if *base_path == "" {
+		fmt.Println("Local path not set")
 		return
-	} else if len(os.Args) > 2 {
-		fmt.Println("Too many arguments provided")
+	}
+	if *cred_path == "" {
+		fmt.Println("Credential path not set")
 		return
 	}
 
-	base_path := os.Args[1]
-	utils.CheckPath(base_path)
+	local_path := filepath.Join(*base_path, "to_mix")
+	utils.CheckPath(local_path)
 
 	log.Println("Starting Google Drive move operation")
 	ctx := context.Background()
-	driveService, _ := drive.NewService(ctx, option.WithCredentialsFile("./cred.json"))
+	driveService, _ := drive.NewService(ctx, option.WithCredentialsFile(*cred_path))
 
 	// Auphonic on Macmini to auphonic upload
 	log.Println("Processing the to be mixed auphonic files")
@@ -54,7 +56,7 @@ func main() {
 	log.Println("Processing the mixed auphonic files")
 	for _, f := range utils.ListFiles(folderIds["auphonic"], driveService) {
 		log.Println(f.Name, "- Downloading...")
-		utils.DownloadFile(driveService, f.Id, filepath.Join(base_path, f.Name))
+		utils.DownloadFile(driveService, f.Id, filepath.Join(local_path, f.Name))
 		log.Println(f.Name, "- Moving...")
 		utils.MoveFile(driveService, f.Id, folderIds["auphonic"], folderIds["sent"])
 		log.Println(f.Name, "- Successfully processed")
@@ -64,7 +66,7 @@ func main() {
 	log.Println("Processing the upload folder")
 	for _, f := range utils.ListFiles(folderIds["upload_source"], driveService) {
 		log.Println(f.Name, "- Downloading...")
-		utils.DownloadFile(driveService, f.Id, filepath.Join(base_path, f.Name))
+		utils.DownloadFile(driveService, f.Id, filepath.Join(local_path, f.Name))
 		log.Println(f.Name, "- Moving...")
 		utils.MoveFile(driveService, f.Id, folderIds["upload_source"], folderIds["sent"])
 		log.Println(f.Name, "- Successfully processed")
