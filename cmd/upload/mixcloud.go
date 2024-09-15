@@ -26,7 +26,6 @@ func MixcloudUpload(srcPath string, localPicPath string, payload map[string]stri
 	writer.WriteField("name", payload["show_name"])
 	writer.WriteField("description", payload["description"])
 	writer.WriteField("hide_stats", "true")
-	fmt.Println(utils.GetPublish())
 	writer.WriteField("publish_date", utils.GetPublish())
 
 	for key, value := range payload {
