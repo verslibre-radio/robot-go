@@ -23,17 +23,9 @@ var folderIds = map[string]string{
 }
 
 func main() {
-	base_path := flag.String("local", "", "Path to local temp storage for audio files")
-	cred_path := flag.String("credentials", "", "Path to credentials file")
+	base_path := flag.String("local", "/var/lib/robot", "Path to local temp storage for audio files")
+	cred_path := flag.String("credentials", "/etc/robot/cred.json", "Path to credentials file")
 	flag.Parse()
-	if *base_path == "" {
-		fmt.Println("Local path not set")
-		return
-	}
-	if *cred_path == "" {
-		fmt.Println("Credential path not set")
-		return
-	}
 
 	local_path := filepath.Join(*base_path, "to_mix")
 	utils.CheckPath(local_path)
