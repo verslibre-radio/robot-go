@@ -20,4 +20,13 @@ The move pacakge is used to move files between google drive folders so that they
 1.1 Download files from `4. Upload folder` to the server
 1.2 Move files from `4. Upload folder` to the `1. Sent to mastering` folder
 
+## Metadata table
+We use a SQLite3 DB for our metadata. This table can be initialized using the `init-db.sh` bash script. You can pass a path to the DB as argument or it defaults to `/var/lib/robot/metadata.db`.
 
+The base_data table can be populated by csv (useful on very first deploy). This done by running the following set of commands:
+```
+sqlite3
+.open <database_path>
+.mode csv
+.import <csv_path> <table_name>
+```
