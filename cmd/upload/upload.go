@@ -8,7 +8,9 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"database/sql"
 
+	_ "github.com/mattn/go-sqlite3"
 	"github.com/mjoes/mixcloud-go/pkg/utils"
 	"google.golang.org/api/drive/v3"
 	"google.golang.org/api/option"
@@ -35,6 +37,10 @@ func main() {
 		return
 	}
 
+  // Open connection to metadata DB
+	sqlDB, _ := sql.Open("sqlite3", *db_path)
+	defer sqlDB.Close()
+  
 	fmt.Println("Starting upload of audio")
 
 	ctx := context.Background()
@@ -46,9 +52,13 @@ func main() {
 
 	log.Println("Looping through files in the to be uploaded folder")
 	for _, f := range files {
-		tag := strings.Split(f.Name(), "_")[1]
-		metadata := get_metadata(*db_path, tag)
+		split_name := strings.Split(f.Name(), "_")
+		date := split_name[0]
+		tag := split_name[1]
+		metadata := get_metadata(sqlDB, tag)
+    new_meta_row(sqlDB, date, metadata)
 
+    return
 		log.Println(f.Name(), "- Starting mixcloud upload process")
 		log.Println(f.Name(), "- Downloading picture to local storage")
 		picture_path := filepath.Join(picture_base_path, metadata.picture)
@@ -79,7 +89,7 @@ func main() {
 		}
 
 		log.Println(f.Name(), "- Update show nr")
-		update_show_nr(*db_path, tag)
+		update_show_nr(sqlDB, tag)
 		log.Println("-----COMPLETED-----")
 	}
 	log.Println("Finished, check log for errors. Exiting program....")
