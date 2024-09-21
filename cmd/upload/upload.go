@@ -95,7 +95,16 @@ func main() {
 
 		// Radiocult
 		log.Println(f.Name(), "- Start upload to Radiocult")
-		log.Println("Yet to be implemented")
+		if get_meta_status(sqlDB, "radiocult", tag, date) {
+			err = RadiocultUpload(audio_path, metadata)
+			if err != nil {
+				log.Fatal("Error:", err)
+				return
+			}
+      update_meta_status(sqlDB, "radiocult", tag, date)
+		} else {
+			log.Println("File already uploaded to Radiocult")
+		}
 
 		// Google drive archive
 		log.Println(f.Name(), "- Start upload to Drive Archive")

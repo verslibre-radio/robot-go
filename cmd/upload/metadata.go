@@ -185,8 +185,8 @@ func new_meta_row(sqlDB *sql.DB, date string, metadata Metadata) {
 			metadata.tags3,
 			metadata.tags4,
 			0,
-			1, // because we havent implemented radiocult yet
 			0,
+      0,
 		)
 		if err != nil {
 			log.Fatal(err)
