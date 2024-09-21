@@ -28,7 +28,6 @@ CREATE TABLE IF NOT EXISTS metadata (
     mixcloud BOOLEAN,
     radiocult BOOLEAN,
     drive BOOLEAN,
-    local BOOLEAN,
     PRIMARY KEY (date, tag)
 );
 

@@ -52,44 +52,64 @@ func main() {
 
 	log.Println("Looping through files in the to be uploaded folder")
 	for _, f := range files {
+    if string(f.Name()[0]) == "." {
+      continue
+    }
 		split_name := strings.Split(f.Name(), "_")
 		date := split_name[0]
 		tag := split_name[1]
 		metadata := get_metadata(sqlDB, tag)
     new_meta_row(sqlDB, date, metadata)
 
-    return
 		log.Println(f.Name(), "- Starting mixcloud upload process")
 		log.Println(f.Name(), "- Downloading picture to local storage")
 		picture_path := filepath.Join(picture_base_path, metadata.picture)
 		utils.GetPicture(metadata.picture, driveService, picture_path, drive_picture_folder)
-
+    audio_path := filepath.Join(audio_base_path, f.Name())
+    
+    // Mixcloud
 		log.Println(f.Name(), "- Start upload to mixcloud")
-		audio_path := filepath.Join(audio_base_path, f.Name())
-		err = MixcloudUpload(audio_path, picture_path, metadata)
-		if err != nil {
-			log.Fatal("Error:", err)
-			return
-		}
+    if get_meta_status(sqlDB, "mixcloud", tag, date) {
+      // err = MixcloudUpload(audio_path, picture_path, metadata)
+      // if err != nil {
+      // 	log.Fatal("Error:", err)
+      // 	return
+      // }
+      update_meta_status(sqlDB, "mixcloud", tag, date)
+    } else {
+      log.Println("File already uploaded to Mixcloud")
+    }
+    
+    // Radiocult
 		log.Println(f.Name(), "- Start upload to Radiocult")
 		log.Println("Yet to be implemented")
-
+    
+    // Google drive archive
 		log.Println(f.Name(), "- Start upload to Drive Archive")
-		err = utils.Upload(driveService, f.Name(), audio_path, archive_id)
-		if err != nil {
-			log.Fatal(err)
-			return
-		}
-
+    if get_meta_status(sqlDB, "drive", tag, date) {
+      // err = utils.Upload(driveService, f.Name(), audio_path, archive_id)
+      // if err != nil {
+      //   log.Fatal(err)
+      //   retur
+      // }
+      update_meta_status(sqlDB, "drive", tag, date)
+    } else {
+      log.Println("File already uploaded to Drive")
+    }
+    
+    // Local drive archive
 		log.Println(f.Name(), "- Move to local archive")
-		err = utils.LocalMove(audio_path, filepath.Join(*archive_path, f.Name()))
-		if err != nil {
-			log.Fatal(err)
-			return
-		}
-
-		log.Println(f.Name(), "- Update show nr")
-		update_show_nr(sqlDB, tag)
+    if ready_for_upload(sqlDB, tag, date) {
+      err = utils.LocalMove(audio_path, filepath.Join(*archive_path, f.Name()))
+      if err != nil {
+        log.Fatal(err)
+        return
+      }
+      log.Println(f.Name(), "- Update show nr")
+      update_show_nr(sqlDB, tag)
+    } else {
+      log.Println("Not all upload stages complete, not moving to archive")
+    }
 		log.Println("-----COMPLETED-----")
 	}
 	log.Println("Finished, check log for errors. Exiting program....")
