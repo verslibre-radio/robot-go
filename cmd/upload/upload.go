@@ -83,11 +83,11 @@ func main() {
 		// Mixcloud
 		log.Println(f.Name(), "- Start upload to mixcloud")
 		if get_meta_status(sqlDB, "mixcloud", tag, date) {
-			// err = MixcloudUpload(audio_path, picture_path, metadata)
-			// if err != nil {
-			// 	log.Fatal("Error:", err)
-			// 	return
-			// }
+			err = MixcloudUpload(audio_path, picture_path, metadata)
+			if err != nil {
+				log.Fatal("Error:", err)
+				return
+			}
 			update_meta_status(sqlDB, "mixcloud", tag, date)
 		} else {
 			log.Println("File already uploaded to Mixcloud")
@@ -109,11 +109,11 @@ func main() {
 		// Google drive archive
 		log.Println(f.Name(), "- Start upload to Drive Archive")
 		if get_meta_status(sqlDB, "drive", tag, date) {
-			// err = utils.Upload(driveService, f.Name(), audio_path, archive_id)
-			// if err != nil {
-			//   log.Fatal(err)
-			//   retur
-			// }
+			err = utils.Upload(driveService, f.Name(), audio_path, archive_id)
+			if err != nil {
+			  log.Fatal(err)
+			  return
+			}
 			update_meta_status(sqlDB, "drive", tag, date)
 		} else {
 			log.Println("File already uploaded to Drive")
