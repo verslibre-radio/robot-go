@@ -71,7 +71,6 @@ func main() {
 		tag := split_name[1]
 
 		metadata := get_metadata(sheet_meta, sqlDB, tag, date)
-		fmt.Println(metadata)
 		new_meta_row(sqlDB, date, metadata)
 
 		log.Println(f.Name(), "- Starting mixcloud upload process")
@@ -95,7 +94,7 @@ func main() {
 
 		// Radiocult
 		log.Println(f.Name(), "- Start upload to Radiocult")
-		if get_meta_status(sqlDB, "radiocult", tag, date) {
+		if get_meta_status(sqlDB, "radiocult", tag, date) && metadata.live {
 			err = RadiocultUpload(audio_path, metadata)
 			if err != nil {
 				log.Fatal("Error:", err)
@@ -103,7 +102,7 @@ func main() {
 			}
       update_meta_status(sqlDB, "radiocult", tag, date)
 		} else {
-			log.Println("File already uploaded to Radiocult")
+			log.Println("File either already uploaded to Radiocult or a Prerecord")
 		}
 
 		// Google drive archive

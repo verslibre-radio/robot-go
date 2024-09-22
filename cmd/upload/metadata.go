@@ -21,12 +21,13 @@ type Metadata struct {
 	tags2       string
 	tags3       string
 	tags4       string
+	live        bool
 }
 
 func check_custom_metadata(sheet *sheets.ValueRange, metadata Metadata, date string, tag string) (bool, Metadata) {
 	for _, row := range sheet.Values {
 		if row[0] == date && row[1] == tag {
-			for len(row) < 11 {
+			for len(row) < 12 {
 				row = append(row, "")
 			}
 			if row[2] != "" {
@@ -56,6 +57,9 @@ func check_custom_metadata(sheet *sheets.ValueRange, metadata Metadata, date str
 			if row[10] != "" {
 				metadata.tags4 = row[10].(string)
 			}
+			if row[11] != "" {
+				metadata.live = row[11].(bool)
+			}
 			return true, metadata
 		}
 	}
@@ -66,7 +70,7 @@ func get_metadata(sheet_meta *sheets.ValueRange, sqlDB *sql.DB, tag string, date
 	var metadata Metadata
 	row := sqlDB.QueryRow(`SELECT * FROM base_data WHERE tag =  ?`, tag)
 
-	err := row.Scan(&metadata.tag, &metadata.show_name, &metadata.show_nr, &metadata.dj_name, &metadata.picture, &metadata.description, &metadata.tags0, &metadata.tags1, &metadata.tags2, &metadata.tags3, &metadata.tags4)
+	err := row.Scan(&metadata.tag, &metadata.show_name, &metadata.show_nr, &metadata.dj_name, &metadata.picture, &metadata.description, &metadata.tags0, &metadata.tags1, &metadata.tags2, &metadata.tags3, &metadata.tags4, &metadata.live)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -165,7 +169,7 @@ func new_meta_row(sqlDB *sql.DB, date string, metadata Metadata) {
 	if !exists {
 		stmt, err := sqlDB.Prepare(`
       INSERT INTO metadata
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `)
 		if err != nil {
 			log.Fatal(err)
@@ -184,6 +188,7 @@ func new_meta_row(sqlDB *sql.DB, date string, metadata Metadata) {
 			metadata.tags2,
 			metadata.tags3,
 			metadata.tags4,
+			metadata.live,
 			0,
 			0,
       0,
