@@ -85,9 +85,9 @@ func main() {
 			err = MixcloudUpload(audio_path, picture_path, metadata)
 			if err != nil {
 				log.Fatal("Error:", err)
-				return
-			}
-			update_meta_status(sqlDB, "mixcloud", tag, date)
+			} else {
+        update_meta_status(sqlDB, "mixcloud", tag, date)
+      }
 		} else {
 			log.Println("File already uploaded to Mixcloud")
 		}
@@ -98,9 +98,9 @@ func main() {
 			err = RadiocultUpload(audio_path, metadata)
 			if err != nil {
 				log.Fatal("Error:", err)
-				return
-			}
-      update_meta_status(sqlDB, "radiocult", tag, date)
+			} else {
+        update_meta_status(sqlDB, "radiocult", tag, date)
+      }
 		} else {
 			log.Println("File either already uploaded to Radiocult or a Prerecord")
 		}
@@ -111,9 +111,9 @@ func main() {
 			err = utils.Upload(driveService, f.Name(), audio_path, archive_id)
 			if err != nil {
 			  log.Fatal(err)
-			  return
-			}
-			update_meta_status(sqlDB, "drive", tag, date)
+			} else {
+        update_meta_status(sqlDB, "drive", tag, date)
+      }
 		} else {
 			log.Println("File already uploaded to Drive")
 		}
@@ -124,10 +124,10 @@ func main() {
 			err = utils.LocalMove(audio_path, filepath.Join(*archive_path, f.Name()))
 			if err != nil {
 				log.Fatal(err)
-				return
-			}
-			log.Println(f.Name(), "- Update show nr")
-			update_show_nr(sqlDB, tag)
+			} else {
+        log.Println(f.Name(), "- Update show nr")
+        update_show_nr(sqlDB, tag)
+      }
 		} else {
 			log.Println("Not all upload stages complete, not moving to archive")
 		}
