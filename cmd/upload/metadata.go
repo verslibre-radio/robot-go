@@ -165,7 +165,12 @@ func new_meta_row(sqlDB *sql.DB, date string, metadata Metadata) {
 		show_nr = 1
 	}
 
-	exists, err := check_row(sqlDB, metadata.tag, date)
+  upload_radiocult := 0
+  if !metadata.live {
+    upload_radiocult = 1
+  }	
+
+  exists, err := check_row(sqlDB, metadata.tag, date)
 	if !exists {
 		stmt, err := sqlDB.Prepare(`
       INSERT INTO metadata
@@ -190,7 +195,7 @@ func new_meta_row(sqlDB *sql.DB, date string, metadata Metadata) {
 			metadata.tags4,
 			metadata.live,
 			0,
-			0,
+			upload_radiocult,
       0,
 		)
 		if err != nil {
