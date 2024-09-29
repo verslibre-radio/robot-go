@@ -12,7 +12,17 @@ import (
 	"path/filepath"
 )
 
-func MixcloudUpload(srcPath string, localPicPath string, metadata Metadata) error {
+func FullShowName(metadata Metadata, date string) string {
+  var name string
+  if metadata.dj_name != "" {
+      name = fmt.Sprintf("%s with %s (%s)", metadata.show_name, metadata.dj_name, date)
+  } else {
+      name = fmt.Sprintf("%s (%s)", metadata.show_name, date)
+  }
+  return name
+}
+
+func MixcloudUpload(srcPath string, localPicPath string, metadata Metadata, date string) error {
 	audioFile, _ := os.Open(srcPath)
 	picFile, _ := os.Open(localPicPath)
 	body := &bytes.Buffer{}
@@ -22,7 +32,7 @@ func MixcloudUpload(srcPath string, localPicPath string, metadata Metadata) erro
 
 	picPart, _ := writer.CreateFormFile("picture", filepath.Base(localPicPath))
 	_, _ = io.Copy(picPart, picFile)
-	writer.WriteField("name", metadata.show_name)
+	writer.WriteField("name", FullShowName(metadata, date))
 	writer.WriteField("description", metadata.description)
 	writer.WriteField("hide_stats", "true")
 	writer.WriteField("publish_date", utils.GetPublish())

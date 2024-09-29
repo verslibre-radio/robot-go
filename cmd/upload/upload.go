@@ -82,7 +82,7 @@ func main() {
 		// Mixcloud
 		log.Println(f.Name(), "- Start upload to mixcloud")
 		if get_meta_status(sqlDB, "mixcloud", tag, date) {
-			err = MixcloudUpload(audio_path, picture_path, metadata)
+			err = MixcloudUpload(audio_path, picture_path, metadata, date)
 			if err != nil {
 				log.Fatal("Error:", err)
 			} else {
