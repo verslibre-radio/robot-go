@@ -78,6 +78,7 @@ func main() {
 		picture_path := filepath.Join(picture_base_path, metadata.picture)
 		utils.GetPicture(metadata.picture, driveService, picture_path, drive_picture_folder)
 		audio_path := filepath.Join(audio_base_path, f.Name())
+    add_tag(audio_path, date, metadata)
 
 		// Mixcloud
 		log.Println(f.Name(), "- Start upload to mixcloud")

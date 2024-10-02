@@ -4,7 +4,9 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+  "strconv"
 
+  "github.com/bogem/id3v2"
 	_ "github.com/mattn/go-sqlite3"
 	"google.golang.org/api/sheets/v4"
 )
@@ -204,4 +206,24 @@ func new_meta_row(sqlDB *sql.DB, date string, metadata Metadata) {
 	} else {
 		log.Println("Row already exists")
 	}
+}
+
+func add_tag(src_path string, date string, metadata Metadata) {
+  tag, err := id3v2.Open(src_path, id3v2.Options{Parse: true})
+	if err != nil {
+ 		log.Fatal("Error while opening mp3 file: ", err)
+ 	}
+
+	tag.SetArtist(metadata.dj_name)
+	tag.SetTitle(fmt.Sprintf("%s %s", date, metadata.show_name))
+	tag.SetAlbum(metadata.show_name)
+  tag.SetYear(date[:4])
+  tag.SetGenre(metadata.tags0)
+  tag.AddTextFrame("TRCK", tag.DefaultEncoding(), strconv.Itoa(metadata.show_nr))
+
+	if err = tag.Save(); err != nil {
+		log.Fatal("Error while saving a tag: ", err)
+	}
+  tag.Close()
+  log.Println("MP3 Tag written to file")
 }
