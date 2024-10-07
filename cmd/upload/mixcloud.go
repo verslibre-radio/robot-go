@@ -14,10 +14,11 @@ import (
 
 func FullShowName(metadata Metadata, date string) string {
   var name string
+  formattedDate := date[:4] + "." + date[4:6] + "." + date[6:]
   if metadata.dj_name != "" {
-      name = fmt.Sprintf("%s with %s (%s)", metadata.show_name, metadata.dj_name, date)
+      name = fmt.Sprintf("%s with %s (%s)", metadata.show_name, metadata.dj_name, formattedDate)
   } else {
-      name = fmt.Sprintf("%s (%s)", metadata.show_name, date)
+      name = fmt.Sprintf("%s (%s)", metadata.show_name, formattedDate)
   }
   return name
 }
