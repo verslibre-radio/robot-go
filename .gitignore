@@ -6,3 +6,4 @@ pictures/*
 upload/*
 *.DS*
 *DS_STORE*
+robot/
