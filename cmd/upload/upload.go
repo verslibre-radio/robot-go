@@ -98,7 +98,7 @@ func main() {
 		if get_meta_status(sqlDB, "radiocult", tag, date) && metadata.live {
 			err = RadiocultUpload(audio_path, metadata)
 			if err != nil {
-				log.Fatal("Error:", err)
+				log.Print("Error:", err)
 			} else {
         update_meta_status(sqlDB, "radiocult", tag, date)
       }

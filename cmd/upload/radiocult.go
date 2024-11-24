@@ -46,9 +46,9 @@ func RadiocultUpload(srcPath string, metadata Metadata) error {
 			return fmt.Errorf("RateLimit Exception, break program")
 		}
     return fmt.Errorf("Response: %s\n", responseBody)
-	} else {
-		log.Printf("Upload to Radiocult %s PASSED\n", metadata.show_name)
-	}
+	} 
+  log.Printf("Upload to Radiocult %s PASSED\n", metadata.show_name)
+
 	resp.Body.Close()
 	audioFile.Close()
 
