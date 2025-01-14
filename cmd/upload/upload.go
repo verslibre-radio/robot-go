@@ -19,7 +19,7 @@ import (
 
 var sheet_id string = "1XmJ8mXzMsBzDv13ZwM9tXasym5z3ZzlmNKC7xFudkzo"
 var drive_picture_folder string = "1t7JgNd4U1oQEYw4NTdHPUFAIxd9YJWq3"
-var archive_id string = "1qklZQWVpNRYJWLd0-0zBhxZLyWCHrtpe"
+var archive_id string = "1-ta7u1WpYOEZyieKYXJmrX5yOXSL77UE"
 
 func main() {
 	base_path := flag.String("local", "/var/lib/robot", "Path to local temp storage for upload files and pictures")
