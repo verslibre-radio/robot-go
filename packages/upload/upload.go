@@ -11,7 +11,7 @@ import (
 	"strings"
 
 	_ "github.com/mattn/go-sqlite3"
-	"github.com/mjoes/mixcloud-go/pkg/utils"
+	"robot-go/utils"
 	"google.golang.org/api/drive/v3"
 	"google.golang.org/api/option"
 	"google.golang.org/api/sheets/v4"
@@ -20,6 +20,13 @@ import (
 var sheet_id string = "1XmJ8mXzMsBzDv13ZwM9tXasym5z3ZzlmNKC7xFudkzo"
 var drive_picture_folder string = "1t7JgNd4U1oQEYw4NTdHPUFAIxd9YJWq3"
 var archive_id string = "1-ta7u1WpYOEZyieKYXJmrX5yOXSL77UE"
+
+func dropSuffix(s string) string {
+	if i := strings.LastIndex(s, "."); i != -1 {
+		return s[:i]
+	}
+	return s
+}
 
 func main() {
 	base_path := flag.String("local", "/var/lib/robot", "Path to local temp storage for upload files and pictures")
@@ -68,7 +75,8 @@ func main() {
 		}
 		split_name := strings.Split(f.Name(), "_")
 		date := split_name[0]
-		tag := split_name[1]
+		tag := dropSuffix(split_name[2])
+		log.Println(tag, date, "- Getting metadata")
 
 		metadata := get_metadata(sheet_meta, sqlDB, tag, date)
 		new_meta_row(sqlDB, date, metadata)
@@ -76,7 +84,11 @@ func main() {
 		log.Println(f.Name(), "- Starting mixcloud upload process")
 		log.Println(f.Name(), "- Downloading picture to local storage")
 		picture_path := filepath.Join(picture_base_path, metadata.picture)
-		utils.GetPicture(metadata.picture, driveService, picture_path, drive_picture_folder)
+		err = utils.GetPicture(metadata.picture, driveService, picture_path, drive_picture_folder)
+		if err != nil {
+			log.Fatal(err)
+		}
+
 		audio_path := filepath.Join(audio_base_path, f.Name())
     add_tag(audio_path, date, metadata)
 
@@ -97,6 +109,7 @@ func main() {
 		log.Println(f.Name(), "- Start upload to Radiocult")
 		if get_meta_status(sqlDB, "radiocult", tag, date) && metadata.live {
 			err = RadiocultUpload(audio_path, metadata)
+			err = nil
 			if err != nil {
 				log.Print("Error:", err)
 			} else {
@@ -110,6 +123,7 @@ func main() {
 		log.Println(f.Name(), "- Start upload to Drive Archive")
 		if get_meta_status(sqlDB, "drive", tag, date) {
 			err = utils.Upload(driveService, f.Name(), audio_path, archive_id)
+			err = nil
 			if err != nil {
 			  log.Fatal(err)
 			} else {

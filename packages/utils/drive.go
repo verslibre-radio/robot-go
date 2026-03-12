@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"errors"
 
 	"google.golang.org/api/drive/v3"
 )
@@ -81,7 +82,7 @@ func CheckPath(path string) error {
 	return nil
 }
 
-func GetPicture(tag string, driveService *drive.Service, picture_path string, drive_picture_folder string) {
+func GetPicture(tag string, driveService *drive.Service, picture_path string, drive_picture_folder string) error {
 	var Q_string string = fmt.Sprintf("'%s' in parents", drive_picture_folder)
 	drive := driveService.Files.List()
 	filtered, err := drive.
@@ -98,8 +99,10 @@ func GetPicture(tag string, driveService *drive.Service, picture_path string, dr
 	for _, f := range filtered.Files {
 		if f.Name == tag {
 			DownloadFile(driveService, f.Id, picture_path)
+			return nil
 		}
 	}
+	return errors.New("Picture not found")
 }
 
 func Upload(srv *drive.Service, file_name string, file_path string, destination_folder string) error {
