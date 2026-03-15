@@ -1,11 +1,18 @@
 {
   description = "Move VL";
-  inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixos-25.11";
+  inputs = {
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-25.11";
+    treefmt-nix = {
+      url = "github:numtide/treefmt-nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+  };
 
   outputs =
     {
       self,
       nixpkgs,
+      treefmt-nix,
     }@inputs:
     let
       inherit (builtins) attrValues;
@@ -20,12 +27,17 @@
         ];
       };
 
+      treefmt = treefmt-nix.lib.evalModule pkgs ./treefmt.nix;
 
     in
     {
-      overlays.vl = (final: prev: {
-          vl = final.callPackage ./packages/default.nix {};
-        });
+      overlays.vl = (
+        final: prev: {
+          vl = final.callPackage ./packages/default.nix { };
+        }
+      );
+
+      formatter.${system} = treefmt.config.build.wrapper;
 
       nixosModules = {
         verslibre = ./modules/verslibre.nix;
@@ -36,6 +48,10 @@
           vl-move
           vl-upload
           ;
+      };
+
+      checks.${system} = {
+        formatting = treefmt.config.build.check self;
       };
 
       devShells.${system} = {

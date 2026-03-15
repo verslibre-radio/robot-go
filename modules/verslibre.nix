@@ -60,7 +60,7 @@ in
       wantedBy = [ "multi-user.target" ];
       after = [ "network.target" ];
       wants = [ "network.target" ];
-      serviceConfig.EnvironmentFile="/etc/vl-upload.env";
+      serviceConfig.EnvironmentFile = "/etc/vl-upload.env";
       script = ''
         echo "Starting moving of files"
         ${pkgs.vl.vl-move}/bin/move --local ${cfg.basePath} --credentials ${cfg.credPath}
