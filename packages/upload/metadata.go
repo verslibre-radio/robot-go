@@ -170,7 +170,7 @@ func new_meta_row(sqlDB *sql.DB, date string, metadata Metadata) {
   upload_radiocult := 0
   if !metadata.live {
     upload_radiocult = 1
-  }	
+  }
 
   exists, err := check_row(sqlDB, metadata.tag, date)
 	if !exists {

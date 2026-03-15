@@ -6,7 +6,7 @@ import (
 	"log"
 	"path/filepath"
 
-	"github.com/mjoes/mixcloud-go/pkg/utils"
+	"robot-go/utils"
 	"google.golang.org/api/drive/v3"
 	"google.golang.org/api/option"
 )
@@ -26,7 +26,7 @@ func main() {
 	cred_path := flag.String("credentials", "/etc/robot/cred.json", "Path to credentials file")
 	flag.Parse()
 
-	local_path := filepath.Join(*base_path, "to_mix")
+	local_path := filepath.Join(*base_path, "to_upload")
 	utils.CheckPath(local_path)
 
 	log.Println("Starting Google Drive move operation")
