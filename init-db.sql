@@ -5,11 +5,11 @@ CREATE TABLE IF NOT EXISTS base_data (
     dj_name TEXT,
     picture TEXT,
     description TEXT,
-    "tags-0-tag" TEXT,
-    "tags-1-tag" TEXT,
-    "tags-2-tag" TEXT,
-    "tags-3-tag" TEXT,
-    "tags-4-tag" TEXT,
+    tags0 TEXT,
+    tags1 TEXT,
+    tags2 TEXT,
+    tags3 TEXT,
+    tags4 TEXT,
     live BOOLEAN
 );
 
@@ -21,15 +21,16 @@ CREATE TABLE IF NOT EXISTS metadata (
     dj_name TEXT,
     picture TEXT,
     description TEXT,
-    "tags-0-tag" TEXT,
-    "tags-1-tag" TEXT,
-    "tags-2-tag" TEXT,
-    "tags-3-tag" TEXT,
-    "tags-4-tag" TEXT,
+    tags0 TEXT,
+    tags1 TEXT,
+    tags2 TEXT,
+    tags3 TEXT,
+    tags4 TEXT,
     live BOOLEAN,
     mixcloud BOOLEAN,
+    soundcloud BOOLEAN,
+    soundcloud_urn TEXT,
     radiocult BOOLEAN,
     drive BOOLEAN,
     PRIMARY KEY (date, tag)
 );
-

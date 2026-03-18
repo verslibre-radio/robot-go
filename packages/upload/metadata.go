@@ -4,9 +4,10 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
-  "strconv"
+	"strconv"
+	"strings"
 
-  "github.com/bogem/id3v2"
+	"github.com/bogem/id3v2"
 	_ "github.com/mattn/go-sqlite3"
 	"google.golang.org/api/sheets/v4"
 )
@@ -24,6 +25,19 @@ type Metadata struct {
 	tags3       string
 	tags4       string
 	live        bool
+}
+
+func migrateMetadataSchema(sqlDB *sql.DB) {
+	statements := []string{
+		`ALTER TABLE metadata ADD COLUMN soundcloud BOOLEAN DEFAULT 0`,
+		`ALTER TABLE metadata ADD COLUMN soundcloud_urn TEXT`,
+	}
+
+	for _, statement := range statements {
+		if _, err := sqlDB.Exec(statement); err != nil && !strings.Contains(strings.ToLower(err.Error()), "duplicate column name") {
+			log.Fatal(err)
+		}
+	}
 }
 
 func check_custom_metadata(sheet *sheets.ValueRange, metadata Metadata, date string, tag string) (bool, Metadata) {
@@ -105,6 +119,14 @@ func update_meta_status(sqlDB *sql.DB, column string, tag string, date string) {
 	}
 }
 
+func update_meta_value(sqlDB *sql.DB, column string, value string, tag string, date string) {
+	query := fmt.Sprintf(`UPDATE metadata SET %s = ? WHERE tag = ? AND date = ?`, column)
+	_, err := sqlDB.Exec(query, value, tag, date)
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
 func get_meta_status(sqlDB *sql.DB, column string, tag string, date string) bool {
 	var status bool
 	query := fmt.Sprintf(`SELECT %s FROM metadata WHERE tag = ? AND date = ?`, column)
@@ -122,7 +144,7 @@ func get_meta_status(sqlDB *sql.DB, column string, tag string, date string) bool
 func ready_for_upload(sqlDB *sql.DB, tag string, date string) bool {
 	var total int
 	query := `
-		SELECT (SUM(mixcloud) + SUM(radiocult) + SUM(drive)) AS total_sum
+		SELECT (SUM(mixcloud) + SUM(soundcloud) + SUM(radiocult) + SUM(drive)) AS total_sum
 		FROM metadata
 		WHERE tag = ? AND date = ?`
 	row := sqlDB.QueryRow(query, tag, date)
@@ -131,7 +153,7 @@ func ready_for_upload(sqlDB *sql.DB, tag string, date string) bool {
 		log.Fatal(err)
 		return false
 	}
-	if total >= 3 {
+	if total >= 4 {
 		return true
 	} else {
 		return false
@@ -167,16 +189,35 @@ func new_meta_row(sqlDB *sql.DB, date string, metadata Metadata) {
 		show_nr = 1
 	}
 
-  upload_radiocult := 0
-  if !metadata.live {
-    upload_radiocult = 1
-  }
+	upload_radiocult := 0
+	if !metadata.live {
+		upload_radiocult = 1
+	}
 
-  exists, err := check_row(sqlDB, metadata.tag, date)
+	exists, err := check_row(sqlDB, metadata.tag, date)
 	if !exists {
 		stmt, err := sqlDB.Prepare(`
-      INSERT INTO metadata
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO metadata (
+        date,
+        tag,
+        show_name,
+        show_nr,
+        dj_name,
+        picture,
+        description,
+        tags0,
+        tags1,
+        tags2,
+        tags3,
+        tags4,
+        live,
+        mixcloud,
+        soundcloud,
+        soundcloud_urn,
+        radiocult,
+        drive
+      )
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `)
 		if err != nil {
 			log.Fatal(err)
@@ -197,8 +238,10 @@ func new_meta_row(sqlDB *sql.DB, date string, metadata Metadata) {
 			metadata.tags4,
 			metadata.live,
 			0,
+			0,
+			"",
 			upload_radiocult,
-      0,
+			0,
 		)
 		if err != nil {
 			log.Fatal(err)
@@ -209,21 +252,21 @@ func new_meta_row(sqlDB *sql.DB, date string, metadata Metadata) {
 }
 
 func add_tag(src_path string, date string, metadata Metadata) {
-  tag, err := id3v2.Open(src_path, id3v2.Options{Parse: true})
+	tag, err := id3v2.Open(src_path, id3v2.Options{Parse: true})
 	if err != nil {
- 		log.Fatal("Error while opening mp3 file: ", err)
- 	}
+		log.Fatal("Error while opening mp3 file: ", err)
+	}
 
 	tag.SetArtist(metadata.dj_name)
 	tag.SetTitle(fmt.Sprintf("%s %s", date, metadata.show_name))
 	tag.SetAlbum(metadata.show_name)
-  tag.SetYear(date[:4])
-  tag.SetGenre(metadata.tags0)
-  tag.AddTextFrame("TRCK", tag.DefaultEncoding(), strconv.Itoa(metadata.show_nr))
+	tag.SetYear(date[:4])
+	tag.SetGenre(metadata.tags0)
+	tag.AddTextFrame("TRCK", tag.DefaultEncoding(), strconv.Itoa(metadata.show_nr))
 
 	if err = tag.Save(); err != nil {
 		log.Fatal("Error while saving a tag: ", err)
 	}
-  tag.Close()
-  log.Println("MP3 Tag written to file")
+	tag.Close()
+	log.Println("MP3 Tag written to file")
 }

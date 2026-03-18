@@ -30,3 +30,25 @@ sqlite3
 .mode csv
 .import <csv_path> <table_name>
 ```
+
+## SoundCloud
+SoundCloud uploads are part of the `upload` pipeline and are tracked in the same SQLite metadata table via the `soundcloud` and `soundcloud_urn` columns.
+
+The uploader requires the following environment variables:
+```
+SOUNDCLOUD_CLIENT_ID=<app client id>
+SOUNDCLOUD_CLIENT_SECRET=<app client secret>
+SOUNDCLOUD_REDIRECT_URI=<registered redirect URI>
+```
+
+The program persists the SoundCloud token set in a separate JSON file, defaulting to `/var/lib/robot/soundcloud-token.json`. The token is refreshed on every run before uploads begin.
+
+Initialize the token file once:
+```
+upload --soundcloud-init-auth --soundcloud-token /var/lib/robot/soundcloud-token.json
+```
+
+Open the printed URL in a browser, authorize the app, copy the returned `code` query parameter, then exchange it:
+```
+upload --soundcloud-auth-code <code> --soundcloud-token /var/lib/robot/soundcloud-token.json
+```
