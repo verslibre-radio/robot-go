@@ -11,10 +11,10 @@ import (
 	"strings"
 
 	_ "github.com/mattn/go-sqlite3"
-	"robot-go/utils"
 	"google.golang.org/api/drive/v3"
 	"google.golang.org/api/option"
 	"google.golang.org/api/sheets/v4"
+	"robot-go/utils"
 )
 
 var sheet_id string = "1XmJ8mXzMsBzDv13ZwM9tXasym5z3ZzlmNKC7xFudkzo"
@@ -33,8 +33,26 @@ func main() {
 	archive_path := flag.String("archive", "", "Path to local archive folder")
 	cred_path := flag.String("credentials", "/etc/robot/cred.json", "Path to credentials file")
 	db_path := flag.String("metadata", "/var/lib/robot/metadata.sql", "Path to credentials file")
+	soundcloud_token_path := flag.String("soundcloud-token", "/var/lib/robot/soundcloud-token.json", "Path to the persisted SoundCloud token file")
+	soundcloud_init_auth := flag.Bool("soundcloud-init-auth", false, "Initialize SoundCloud OAuth by generating an authorization URL")
+	soundcloud_auth_code := flag.String("soundcloud-auth-code", "", "Exchange a SoundCloud authorization code for a persisted token")
 
 	flag.Parse()
+	if *soundcloud_init_auth {
+		authURL, err := startSoundcloudAuth(*soundcloud_token_path)
+		if err != nil {
+			log.Fatal(err)
+		}
+		fmt.Println(authURL)
+		return
+	}
+	if *soundcloud_auth_code != "" {
+		if err := finishSoundcloudAuth(*soundcloud_token_path, *soundcloud_auth_code); err != nil {
+			log.Fatal(err)
+		}
+		fmt.Println("Stored SoundCloud token")
+		return
+	}
 	if *archive_path == "" {
 		fmt.Println("Archive path not set")
 		return
@@ -49,8 +67,14 @@ func main() {
 	// Open connection to metadata DB
 	sqlDB, _ := sql.Open("sqlite3", *db_path)
 	defer sqlDB.Close()
+	migrateMetadataSchema(sqlDB)
 
 	fmt.Println("Starting upload of audio")
+	soundcloudToken, err := refreshSoundcloudToken(*soundcloud_token_path)
+	if err != nil {
+		log.Fatal(err)
+	}
+	log.Println("Refreshed SoundCloud token")
 
 	ctx := context.Background()
 	driveService, err := drive.NewService(ctx, option.WithCredentialsFile(*cred_path))
@@ -90,7 +114,7 @@ func main() {
 		}
 
 		audio_path := filepath.Join(audio_base_path, f.Name())
-    add_tag(audio_path, date, metadata)
+		add_tag(audio_path, date, metadata)
 
 		// Mixcloud
 		log.Println(f.Name(), "- Start upload to mixcloud")
@@ -99,10 +123,24 @@ func main() {
 			if err != nil {
 				log.Fatal("Error:", err)
 			} else {
-        update_meta_status(sqlDB, "mixcloud", tag, date)
-      }
+				update_meta_status(sqlDB, "mixcloud", tag, date)
+			}
 		} else {
 			log.Println("File already uploaded to Mixcloud")
+		}
+
+		// SoundCloud
+		log.Println(f.Name(), "- Start upload to SoundCloud")
+		if get_meta_status(sqlDB, "soundcloud", tag, date) {
+			trackURN, err := SoundcloudUpload(audio_path, picture_path, metadata, date, soundcloudToken.AccessToken)
+			if err != nil {
+				log.Fatal("Error:", err)
+			} else {
+				update_meta_status(sqlDB, "soundcloud", tag, date)
+				update_meta_value(sqlDB, "soundcloud_urn", trackURN, tag, date)
+			}
+		} else {
+			log.Println("File already uploaded to SoundCloud")
 		}
 
 		// Radiocult
@@ -113,8 +151,8 @@ func main() {
 			if err != nil {
 				log.Print("Error:", err)
 			} else {
-        update_meta_status(sqlDB, "radiocult", tag, date)
-      }
+				update_meta_status(sqlDB, "radiocult", tag, date)
+			}
 		} else {
 			log.Println("File either already uploaded to Radiocult or a Prerecord")
 		}
@@ -125,10 +163,10 @@ func main() {
 			err = utils.Upload(driveService, f.Name(), audio_path, archive_id)
 			err = nil
 			if err != nil {
-			  log.Fatal(err)
+				log.Fatal(err)
 			} else {
-        update_meta_status(sqlDB, "drive", tag, date)
-      }
+				update_meta_status(sqlDB, "drive", tag, date)
+			}
 		} else {
 			log.Println("File already uploaded to Drive")
 		}
@@ -140,9 +178,9 @@ func main() {
 			if err != nil {
 				log.Fatal(err)
 			} else {
-        log.Println(f.Name(), "- Update show nr")
-        update_show_nr(sqlDB, tag)
-      }
+				log.Println(f.Name(), "- Update show nr")
+				update_show_nr(sqlDB, tag)
+			}
 		} else {
 			log.Println("Not all upload stages complete, not moving to archive")
 		}

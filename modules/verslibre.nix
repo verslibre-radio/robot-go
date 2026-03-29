@@ -31,6 +31,10 @@ in
         type = path;
         default = "/var/lib/robot/metadata.sql";
       };
+      soundcloudTokenPath = mkOption {
+        type = path;
+        default = "/var/lib/robot/soundcloud-token.json";
+      };
       timerConfig = mkOption {
         default = { };
         description = ''
@@ -69,7 +73,7 @@ in
         find ${cfg.archivePath} -type f -mtime +7 -delete
 
         echo "Starting upload"
-        ${pkgs.vl.vl-upload}/bin/upload --local ${cfg.basePath} --credentials ${cfg.credPath} --metadata ${cfg.dbPath} --archive ${cfg.archivePath}
+        ${pkgs.vl.vl-upload}/bin/upload --local ${cfg.basePath} --credentials ${cfg.credPath} --metadata ${cfg.dbPath} --archive ${cfg.archivePath} --soundcloud-token ${cfg.soundcloudTokenPath}
 
         echo "Finished the program"
       '';

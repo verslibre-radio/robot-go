@@ -16,10 +16,10 @@ func RadiocultUpload(srcPath string, metadata Metadata) error {
 	body := &bytes.Buffer{}
 	writer := multipart.NewWriter(body)
 	mp3Part, err := writer.CreateFormFile("stationMedia", filepath.Base(srcPath))
-  if err != nil {
-    log.Printf("Failed to create form file part: %v\n", err)
-    return err
-  }
+	if err != nil {
+		log.Printf("Failed to create form file part: %v\n", err)
+		return err
+	}
 	_, _ = io.Copy(mp3Part, audioFile)
 	_ = writer.Close()
 
@@ -38,16 +38,16 @@ func RadiocultUpload(srcPath string, metadata Metadata) error {
 		return err
 	}
 
-  fmt.Println(resp.Status)
+	fmt.Println(resp.Status)
 	if resp.StatusCode != http.StatusOK && resp.StatusCode != 201 {
 		fmt.Printf("Upload to Radiocult %s failed: %s\n", metadata.show_name, resp.Status)
-    responseBody, _ := io.ReadAll(resp.Body)
+		responseBody, _ := io.ReadAll(resp.Body)
 		if bytes.Contains(responseBody, []byte("RateLimitException")) {
 			return fmt.Errorf("RateLimit Exception, break program")
 		}
-    return fmt.Errorf("Response: %s\n", responseBody)
+		return fmt.Errorf("Response: %s\n", responseBody)
 	}
-  log.Printf("Upload to Radiocult %s PASSED\n", metadata.show_name)
+	log.Printf("Upload to Radiocult %s PASSED\n", metadata.show_name)
 
 	resp.Body.Close()
 	audioFile.Close()
