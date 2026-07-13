@@ -121,7 +121,7 @@ func main() {
 		if get_meta_status(sqlDB, "mixcloud", tag, date) {
 			err = MixcloudUpload(audio_path, picture_path, metadata, date)
 			if err != nil {
-				log.Fatal("Error:", err)
+				log.Print("Error:", err)
 			} else {
 				update_meta_status(sqlDB, "mixcloud", tag, date)
 			}
@@ -134,7 +134,7 @@ func main() {
 		if get_meta_status(sqlDB, "soundcloud", tag, date) {
 			trackURN, err := SoundcloudUpload(audio_path, picture_path, metadata, date, soundcloudToken.AccessToken)
 			if err != nil {
-				log.Fatal("Error:", err)
+				log.Print("Error:", err)
 			} else {
 				update_meta_status(sqlDB, "soundcloud", tag, date)
 				update_meta_value(sqlDB, "soundcloud_urn", trackURN, tag, date)
