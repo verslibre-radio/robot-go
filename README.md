@@ -145,11 +145,13 @@ For each staged audio file, the uploader:
 5. Writes ID3 tags into the MP3
 6. Uploads to Mixcloud
 7. Uploads to SoundCloud and stores the returned track URN
-8. Uploads live shows to Radiocult
+8. Uploads shows to Radiocult when the `live` value is true
 9. Uploads the MP3 to the Google Drive archive
 10. Moves fully uploaded files into the local archive
 
 Uploads are tracked per destination in SQLite so repeated runs can continue where a previous run left off.
+
+The existing `live` column in the `meta` worksheet controls RadioCult uploads. Set it to `TRUE` or `1` to upload to RadioCult; set it to `FALSE` or `0` to skip. Skipped shows are marked complete for RadioCult so they can still be archived.
 
 ## Database
 

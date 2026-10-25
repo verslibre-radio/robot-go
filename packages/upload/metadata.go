@@ -74,12 +74,38 @@ func check_custom_metadata(sheet *sheets.ValueRange, metadata Metadata, date str
 				metadata.tags4 = row[10].(string)
 			}
 			if row[11] != "" {
-				metadata.live = row[11].(bool)
+				if live, ok := parseLiveValue(row[11]); ok {
+					metadata.live = live
+				} else {
+					log.Printf("Invalid live value %v for %s %s; using base metadata setting", row[11], date, tag)
+				}
 			}
 			return true, metadata
 		}
 	}
 	return false, metadata
+}
+
+func parseLiveValue(value interface{}) (bool, bool) {
+	switch typed := value.(type) {
+	case bool:
+		return typed, true
+	case float64:
+		if typed == 1 {
+			return true, true
+		}
+		if typed == 0 {
+			return false, true
+		}
+	case string:
+		switch strings.ToLower(strings.TrimSpace(typed)) {
+		case "true", "1":
+			return true, true
+		case "false", "0":
+			return false, true
+		}
+	}
+	return false, false
 }
 
 func get_metadata(sheet_meta *sheets.ValueRange, sqlDB *sql.DB, tag string, date string) Metadata {
@@ -90,7 +116,6 @@ func get_metadata(sheet_meta *sheets.ValueRange, sqlDB *sql.DB, tag string, date
 	if err != nil {
 		log.Fatal(err)
 	}
-
 	add, custom := check_custom_metadata(sheet_meta, metadata, date, tag)
 	if add {
 		return custom
