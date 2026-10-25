@@ -147,14 +147,13 @@ func main() {
 		log.Println(f.Name(), "- Start upload to Radiocult")
 		if get_meta_status(sqlDB, "radiocult", tag, date) && metadata.live {
 			err = RadiocultUpload(audio_path, metadata)
-			err = nil
 			if err != nil {
 				log.Print("Error:", err)
 			} else {
 				update_meta_status(sqlDB, "radiocult", tag, date)
 			}
 		} else {
-			log.Println("File either already uploaded to Radiocult or a Prerecord")
+			log.Println("File either already uploaded to Radiocult or configured to skip Radiocult")
 		}
 
 		// Google drive archive
